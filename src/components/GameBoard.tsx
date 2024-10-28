@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { CardState, GameState, Player } from '@/types';
+import type { CardState, GameState } from '@/types';
 
 const GameBoard: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -17,7 +17,7 @@ const GameBoard: React.FC = () => {
     return shuffled;
   };
 
-  const initializeGame = (): GameState => {
+  const initializeGame = useCallback((): GameState => {
     console.log('ゲームを初期化中...');
     const values = Array(8)
       .fill(0)
@@ -36,55 +36,7 @@ const GameBoard: React.FC = () => {
       playerScore: 0,
       cpuScore: 0,
     };
-  };
-
-  useEffect(() => {
-    setGameState(initializeGame());
   }, []);
-
-  const flipCard = useCallback(
-    (id: number) => {
-      if (!gameState) return;
-      setGameState((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          cards: prev.cards.map((card) =>
-            card.id === id ? { ...card, isFlipped: true } : card
-          ),
-        };
-      });
-      setFlippedCards((prev) => [...prev, id]);
-    },
-    [gameState]
-  );
-
-  const handleCardClick = useCallback(
-    (id: number) => {
-      if (
-        !gameState ||
-        gameState.currentPlayer !== 'player' ||
-        isChecking ||
-        flippedCards.length === 2
-      )
-        return;
-
-      const clickedCard = gameState.cards.find((card) => card.id === id);
-      if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched)
-        return;
-
-      flipCard(id);
-      console.log(`プレイヤーが${clickedCard.value}をめくりました。`);
-
-      if (flippedCards.length === 1) {
-        setIsChecking(true);
-        setTimeout(() => {
-          checkForMatch([flippedCards[0], id]);
-        }, 1000);
-      }
-    },
-    [gameState, isChecking, flippedCards, flipCard]
-  );
 
   const checkForMatch = useCallback(
     (flippedCardIds: number[]) => {
@@ -145,6 +97,50 @@ const GameBoard: React.FC = () => {
     [gameState]
   );
 
+  const flipCard = useCallback(
+    (id: number) => {
+      if (!gameState) return;
+      setGameState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === id ? { ...card, isFlipped: true } : card
+          ),
+        };
+      });
+      setFlippedCards((prev) => [...prev, id]);
+    },
+    [gameState]
+  );
+
+  const handleCardClick = useCallback(
+    (id: number) => {
+      if (
+        !gameState ||
+        gameState.currentPlayer !== 'player' ||
+        isChecking ||
+        flippedCards.length === 2
+      )
+        return;
+
+      const clickedCard = gameState.cards.find((card) => card.id === id);
+      if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched)
+        return;
+
+      flipCard(id);
+      console.log(`プレイヤーが${clickedCard.value}をめくりました。`);
+
+      if (flippedCards.length === 1) {
+        setIsChecking(true);
+        setTimeout(() => {
+          checkForMatch([flippedCards[0], id]);
+        }, 1000);
+      }
+    },
+    [gameState, isChecking, flippedCards, flipCard, checkForMatch]
+  );
+
   const handleCpuTurn = useCallback(() => {
     if (!gameState) return;
     console.log('CPUのターンが開始されました');
@@ -174,6 +170,10 @@ const GameBoard: React.FC = () => {
       }
     }, 1000);
   }, [gameState, flipCard, checkForMatch]);
+
+  useEffect(() => {
+    setGameState(initializeGame());
+  }, [initializeGame]);
 
   useEffect(() => {
     if (gameState && gameState.currentPlayer === 'cpu' && !isChecking) {

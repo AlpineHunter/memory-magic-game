@@ -2,16 +2,23 @@
 
 /**
  * カードの状態を表す型
+ * @property id - カードの一意の識別子
  * @property value - カードの値（例：'A', '2', '3'など）
  * @property isFlipped - カードが裏返されているかどうか
  * @property isMatched - カードがマッチしているかどうか
  */
 export type CardState = {
-  id: number; // この行を追加
+  id: number;
   value: string;
   isFlipped: boolean;
   isMatched: boolean;
 };
+
+/**
+ * プレイヤーを表す型
+ * 'player'はユーザー、'cpu'はコンピューター操作のプレイヤーを表す
+ */
+export type Player = 'player' | 'cpu';
 
 /**
  * ゲームの全体的な状態を表す型
@@ -28,16 +35,10 @@ export type GameState = {
 };
 
 /**
- * プレイヤーを表す型
- * 'player'はユーザー、'cpu'はコンピューター操作のプレイヤーを表す
- */
-export type Player = 'player' | 'cpu';
-
-/**
  * ゲーム内で発生する可能性のあるすべてのアクションを表す型
  */
 export type GameAction =
-  | { type: 'FLIP_CARD'; index: number } // カードを裏返すアクション
-  | { type: 'MATCH_CARDS'; indices: [number, number] } // カードをマッチさせるアクション
-  | { type: 'NEXT_TURN' } // 次のターンに移るアクション
-  | { type: 'RESET_GAME' }; // ゲームをリセットするアクション
+  | { type: 'FLIP_CARD'; index: number }
+  | { type: 'MATCH_CARDS'; indices: [number, number] }
+  | { type: 'NEXT_TURN' }
+  | { type: 'RESET_GAME' };
