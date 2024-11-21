@@ -174,6 +174,24 @@ const GameBoard: React.FC = () => {
     }, 1000);
   }, [gameState, flipCard, checkForMatch]);
 
+  // ペアがすべて成立したかを確認する関数
+  const checkForGameEnd = useCallback(() => {
+    if (!gameState) return;
+
+    const allMatched = gameState.cards.every((card) => card.isMatched);
+    if (allMatched) {
+      const winner =
+        gameState.playerScore > gameState.cpuScore
+          ? 'プレイヤーの勝利'
+          : gameState.playerScore < gameState.cpuScore
+          ? 'CPUの勝利'
+          : '引き分け';
+
+      return winner;
+    }
+    return null;
+  }, [gameState]);
+
   // コンポーネントの初回レンダリング時にゲームを初期化
   useEffect(() => {
     setGameState(initializeGame());
@@ -192,6 +210,8 @@ const GameBoard: React.FC = () => {
   if (!gameState) {
     return <div>Loading...</div>;
   }
+
+  const winnerMessage = checkForGameEnd();
 
   return (
     <div className='flex justify-center items-center min-h-screen'>
