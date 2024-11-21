@@ -4,10 +4,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import type { CardState, GameState } from '@/types';
 
 const GameBoard: React.FC = () => {
+  // ゲームの状態を管理するステート
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [isChecking, setIsChecking] = useState(false);
 
+  // カードをシャッフルする関数
   const shuffleCards = (cards: CardState[]): CardState[] => {
     const shuffled = [...cards];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -17,6 +19,7 @@ const GameBoard: React.FC = () => {
     return shuffled;
   };
 
+  // ゲームを初期化する関数
   const initializeGame = useCallback((): GameState => {
     console.log('ゲームを初期化中...');
     const values = Array(8)
@@ -38,6 +41,7 @@ const GameBoard: React.FC = () => {
     };
   }, []);
 
+  // カードが一致するかどうかを確認する関数
   const checkForMatch = useCallback(
     (flippedCardIds: number[]) => {
       if (!gameState) return;
@@ -97,6 +101,7 @@ const GameBoard: React.FC = () => {
     [gameState]
   );
 
+  // カードをめくる関数
   const flipCard = useCallback(
     (id: number) => {
       if (!gameState) return;
@@ -114,6 +119,7 @@ const GameBoard: React.FC = () => {
     [gameState]
   );
 
+  // カードがクリックされたときの処理
   const handleCardClick = useCallback(
     (id: number) => {
       if (
@@ -141,6 +147,7 @@ const GameBoard: React.FC = () => {
     [gameState, isChecking, flippedCards, flipCard, checkForMatch]
   );
 
+  // CPUのターンを処理する関数
   const handleCpuTurn = useCallback(() => {
     if (!gameState) return;
     console.log('CPUのターンが開始されました');
@@ -171,10 +178,12 @@ const GameBoard: React.FC = () => {
     }, 1000);
   }, [gameState, flipCard, checkForMatch]);
 
+  // コンポーネントの初回レンダリング時にゲームを初期化
   useEffect(() => {
     setGameState(initializeGame());
   }, [initializeGame]);
 
+  // ゲームの状態が変わったときにCPUのターンを処理
   useEffect(() => {
     if (gameState && gameState.currentPlayer === 'cpu' && !isChecking) {
       const timer = setTimeout(() => {
@@ -199,12 +208,12 @@ const GameBoard: React.FC = () => {
             {/* メインコンテナ */}
             <div className='relative px-8 py-6 bg-white dark:bg-gray-900 rounded-xl shadow-xl'>
               <div className='flex flex-col items-center space-y-1'>
-                {/* Main Title */}
+                {/* メインタイトル */}
                 <div className='text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent'>
                   Memory Card Game
                 </div>
 
-                {/* Japanese Title */}
+                {/* 日本語タイトル */}
                 <div className='text-2xl md:text-3xl font-bold tracking-widest bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent'>
                   メモリーカードゲーム
                 </div>
@@ -220,6 +229,7 @@ const GameBoard: React.FC = () => {
           </div>
         </div>
 
+        {/* スコア表示 */}
         <div className='scores mb-6 p-4 bg-white rounded-lg shadow-md'>
           <div className='grid grid-cols-2 gap-4 text-center'>
             <div className='p-2 bg-indigo-100 rounded'>
@@ -249,11 +259,12 @@ const GameBoard: React.FC = () => {
           </p>
         </div>
 
-        <div className='grid grid-cols-4 gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full justify-items-center'>
+        {/* カードグリッド */}
+        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full justify-items-center'>
           {gameState.cards.map((card) => (
             <div
               key={card.id}
-              className={`card aspect-square w-[calc(25vw-0.5rem)] sm:w-[calc(25vw-1rem)] md:w-[calc(25vw-1.5rem)] 
+              className={`card aspect-square w-[calc(50vw-0.5rem)] sm:w-[calc(33.33vw-1rem)] md:w-[calc(25vw-1.5rem)] 
                  max-w-[4rem] sm:max-w-[5rem] md:max-w-[7rem] lg:max-w-[9rem] 
                  flex items-center justify-center text-white cursor-pointer 
                  rounded-md sm:rounded-lg shadow-md sm:shadow-lg transition-all duration-300 transform hover:scale-105
