@@ -209,12 +209,12 @@ const GameBoard: React.FC = () => {
             <div className='relative px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 bg-white dark:bg-gray-900 rounded-xl shadow-xl'>
               <div className='flex flex-col items-center space-y-1'>
                 {/* メインタイトル */}
-                <div className='text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent'>
+                <div className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent'>
                   Memory Card Game
                 </div>
 
                 {/* 日本語タイトル */}
-                <div className='text-xl sm:text-2xl md:text-3xl lg:text-3xl font-bold tracking-widest bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent'>
+                <div className='text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-widest bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent'>
                   メモリーカードゲーム
                 </div>
 
