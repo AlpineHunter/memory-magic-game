@@ -260,11 +260,11 @@ const GameBoard: React.FC = () => {
         </div>
 
         {/* カードグリッド */}
-        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full justify-items-center'>
+        <div className='grid grid-cols-4 gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full justify-items-center'>
           {gameState.cards.map((card) => (
             <div
               key={card.id}
-              className={`card aspect-square w-[calc(50vw-0.5rem)] sm:w-[calc(33.33vw-1rem)] md:w-[calc(25vw-1.5rem)] 
+              className={`card aspect-square w-[calc(25vw-0.5rem)] sm:w-[calc(25vw-1rem)] md:w-[calc(25vw-1.5rem)] 
                  max-w-[4rem] sm:max-w-[5rem] md:max-w-[7rem] lg:max-w-[9rem] 
                  flex items-center justify-center text-white cursor-pointer 
                  rounded-md sm:rounded-lg shadow-md sm:shadow-lg transition-all duration-300 transform hover:scale-105
