@@ -264,7 +264,7 @@ const GameBoard: React.FC = () => {
           {gameState.cards.map((card) => (
             <div
               key={card.id}
-              className={`card aspect-square w-[calc(22vw-0.5rem)] sm:w-[calc(22vw-1rem)] md:w-[calc(22vw-1.5rem)] 
+              className={`card aspect-square w-[calc(23vw-1rem)] sm:w-[calc(23vw-1.5rem)] md:w-[calc(23vw-2rem)] 
                  max-w-[3.5rem] sm:max-w-[4.5rem] md:max-w-[6.5rem] lg:max-w-[8.5rem] 
                  flex items-center justify-center text-white cursor-pointer 
                  rounded-md sm:rounded-lg shadow-md sm:shadow-lg transition-all duration-300 transform hover:scale-105
