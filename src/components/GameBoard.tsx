@@ -182,10 +182,10 @@ const GameBoard: React.FC = () => {
     if (allMatched) {
       const winner =
         gameState.playerScore > gameState.cpuScore
-          ? 'プレイヤーの勝利'
+          ? { message: 'プレイヤーの勝利', color: 'text-indigo-600' }
           : gameState.playerScore < gameState.cpuScore
-          ? 'CPUの勝利'
-          : '引き分け';
+          ? { message: 'CPUの勝利', color: 'text-pink-600' }
+          : { message: '引き分け', color: 'text-gray-600' };
 
       return winner;
     }
@@ -211,7 +211,7 @@ const GameBoard: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  const winnerMessage = checkForGameEnd();
+  const winnerInfo = checkForGameEnd();
 
   return (
     <div className='flex justify-center items-center min-h-screen'>
@@ -262,8 +262,10 @@ const GameBoard: React.FC = () => {
             </div>
           </div>
           <p className='mt-4 text-center text-lg font-medium text-gray-700'>
-            {winnerMessage ? (
-              <span className='font-bold text-indigo-600'>{winnerMessage}</span>
+            {winnerInfo ? (
+              <span className={`font-bold ${winnerInfo.color}`}>
+                {winnerInfo.message}
+              </span>
             ) : (
               <>
                 現在のターン:
