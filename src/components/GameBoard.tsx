@@ -262,16 +262,22 @@ const GameBoard: React.FC = () => {
             </div>
           </div>
           <p className='mt-4 text-center text-lg font-medium text-gray-700'>
-            現在のターン:
-            <span
-              className={`font-bold ${
-                gameState.currentPlayer === 'player'
-                  ? 'text-indigo-600'
-                  : 'text-pink-600'
-              }`}
-            >
-              {gameState.currentPlayer === 'player' ? 'プレイヤー' : 'CPU'}
-            </span>
+            {winnerMessage ? (
+              <span className='font-bold text-indigo-600'>{winnerMessage}</span>
+            ) : (
+              <>
+                現在のターン:
+                <span
+                  className={`font-bold ${
+                    gameState.currentPlayer === 'player'
+                      ? 'text-indigo-600'
+                      : 'text-pink-600'
+                  }`}
+                >
+                  {gameState.currentPlayer === 'player' ? 'プレイヤー' : 'CPU'}
+                </span>
+              </>
+            )}
           </p>
         </div>
 
