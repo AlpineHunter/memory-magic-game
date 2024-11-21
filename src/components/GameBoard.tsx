@@ -122,11 +122,12 @@ const GameBoard: React.FC = () => {
   // カードがクリックされたときの処理
   const handleCardClick = useCallback(
     (id: number) => {
+      // すでに2枚のカードが引かれている場合、またはチェック中の場合はクリックを無効にする
       if (
         !gameState ||
         gameState.currentPlayer !== 'player' ||
         isChecking ||
-        flippedCards.length === 2
+        flippedCards.length >= 2
       )
         return;
 
