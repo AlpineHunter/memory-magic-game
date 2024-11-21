@@ -122,8 +122,8 @@ const GameBoard: React.FC = () => {
   // カードがクリックされたときの処理
   const handleCardClick = useCallback(
     (id: number) => {
-      // 判定中の場合はクリックを無効にする
-      if (!gameState || isChecking || flippedCards.length >= 2) return;
+      // 判定中または2枚のカードが引かれている場合はクリックを無効にする
+      if (!gameState || isChecking) return;
 
       const clickedCard = gameState.cards.find((card) => card.id === id);
       if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched)
@@ -133,10 +133,14 @@ const GameBoard: React.FC = () => {
       console.log(`プレイヤーが${clickedCard.value}をめくりました。`);
 
       if (flippedCards.length === 1) {
+        // 2枚目のカードを引いた瞬間に判定中フラグを立てる
         setIsChecking(true);
         setTimeout(() => {
           checkForMatch([flippedCards[0], id]);
         }, 1000);
+      } else {
+        // 1枚目のカードを引いた場合もフラグを立てる
+        setFlippedCards((prev) => [...prev, id]);
       }
     },
     [gameState, isChecking, flippedCards, flipCard, checkForMatch]
