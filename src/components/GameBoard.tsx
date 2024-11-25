@@ -2,6 +2,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import type { CardState, GameState } from '@/types';
+import ScoreBoard from './ScoreBoard';
+import Card from './Card';
 
 const GameBoard: React.FC = () => {
   // ゲームの状態を管理するステート
@@ -185,21 +187,19 @@ const GameBoard: React.FC = () => {
   }, [gameState, flipCard, checkForMatch]);
 
   // ペアがすべて成立したかを確認する関数
-  const checkForGameEnd = useCallback(() => {
-    if (!gameState) return;
+  const checkForGameEnd = useCallback((): {
+    message: string;
+    color: string;
+  } | null => {
+    if (!gameState) return null;
 
-    // すべてのカードがマッチしたか確認
     const allMatched = gameState.cards.every((card) => card.isMatched);
     if (allMatched) {
-      // 勝者を決定
-      const winner =
-        gameState.playerScore > gameState.cpuScore
-          ? { message: 'プレイヤーの勝利', color: 'text-indigo-600' }
-          : gameState.playerScore < gameState.cpuScore
-          ? { message: 'CPUの勝利', color: 'text-pink-600' }
-          : { message: '引き分け', color: 'text-gray-600' };
-
-      return winner;
+      return gameState.playerScore > gameState.cpuScore
+        ? { message: 'プレイヤーの勝利', color: 'text-indigo-600' }
+        : gameState.playerScore < gameState.cpuScore
+        ? { message: 'CPUの勝利', color: 'text-pink-600' }
+        : { message: '引き分け', color: 'text-gray-600' };
     }
     return null;
   }, [gameState]);
@@ -260,74 +260,11 @@ const GameBoard: React.FC = () => {
           </div>
         </div>
 
-        {/* スコア表示 */}
-        <div className='scores mb-6 p-4 bg-white rounded-lg shadow-md'>
-          <div className='grid grid-cols-2 gap-4 text-center'>
-            <div className='p-2 bg-indigo-100 rounded'>
-              <p className='font-semibold text-indigo-800'>あなた</p>
-              <p className='text-2xl font-bold text-indigo-600'>
-                {gameState.playerScore}
-              </p>
-            </div>
-            <div className='p-2 bg-pink-100 rounded'>
-              <p className='font-semibold text-pink-800'>CPU</p>
-              <p className='text-2xl font-bold text-pink-600'>
-                {gameState.cpuScore}
-              </p>
-            </div>
-          </div>
-          <p className='mt-4 text-center text-lg font-medium text-gray-700'>
-            {winnerInfo ? (
-              <span className={`font-bold ${winnerInfo.color}`}>
-                {winnerInfo.message}
-              </span>
-            ) : (
-              <>
-                現在のターン:
-                <span
-                  className={`font-bold ${
-                    gameState.currentPlayer === 'player'
-                      ? 'text-indigo-600'
-                      : 'text-pink-600'
-                  }`}
-                >
-                  {gameState.currentPlayer === 'player' ? 'プレイヤー' : 'CPU'}
-                </span>
-              </>
-            )}
-          </p>
-        </div>
+        <ScoreBoard gameState={gameState} winnerInfo={winnerInfo} />
 
-        {/* カードグリッド */}
         <div className='grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full justify-items-center'>
           {gameState.cards.map((card) => (
-            <div
-              key={card.id}
-              className={`card aspect-square w-[calc(23vw-1rem)] sm:w-[calc(23vw-1.5rem)] md:w-[calc(23vw-2rem)] 
-                 max-w-[3.5rem] sm:max-w-[4.5rem] md:max-w-[6.5rem] lg:max-w-[8.5rem] 
-                 flex items-center justify-center text-white cursor-pointer 
-                 rounded-md sm:rounded-lg shadow-md sm:shadow-lg transition-all duration-300 transform hover:scale-105
-                 ${
-                   card.isFlipped
-                     ? 'bg-green-500 rotate-y-180'
-                     : 'bg-gradient-to-br from-blue-400 to-indigo-600'
-                 }
-                 ${card.isMatched ? 'bg-green-500' : ''}`}
-              onClick={() => handleCardClick(card.id)}
-            >
-              <span
-                className={`text-xs sm:text-sm md:text-base lg:text-xl font-bold
-                    ${card.isFlipped || card.isMatched ? '' : 'hidden'}`}
-              >
-                {card.value}
-              </span>
-              <span
-                className={`text-xs sm:text-sm md:text-base lg:text-xl font-bold
-                    ${card.isFlipped || card.isMatched ? 'hidden' : ''}`}
-              >
-                ?
-              </span>
-            </div>
+            <Card key={card.id} card={card} onClick={handleCardClick} />
           ))}
         </div>
       </div>
