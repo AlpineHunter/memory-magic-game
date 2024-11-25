@@ -12,6 +12,7 @@ const GameBoard: React.FC = () => {
   // カードをシャッフルする関数
   const shuffleCards = (cards: CardState[]): CardState[] => {
     const shuffled = [...cards];
+    // Fisher-Yatesアルゴリズムでカードをシャッフル
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -22,10 +23,12 @@ const GameBoard: React.FC = () => {
   // ゲームを初期化する関数
   const initializeGame = useCallback((): GameState => {
     console.log('ゲームを初期化中...');
+    // 1から8までの数字を2セット作成
     const values = Array(8)
       .fill(0)
       .map((_, i) => i + 1);
     const doubledValues = [...values, ...values];
+    // カードの初期状態を設定
     const initialCards: CardState[] = doubledValues.map((value, index) => ({
       id: index,
       value: `${value}`,
@@ -35,7 +38,7 @@ const GameBoard: React.FC = () => {
     console.log('ゲームの初期化が完了しました。');
     return {
       cards: shuffleCards(initialCards),
-      currentPlayer: 'player',
+      currentPlayer: 'player', // プレイヤーのターンから開始
       playerScore: 0,
       cpuScore: 0,
     };
@@ -49,17 +52,20 @@ const GameBoard: React.FC = () => {
       const firstCard = gameState.cards.find((card) => card.id === firstId);
       const secondCard = gameState.cards.find((card) => card.id === secondId);
 
+      // 2枚のカードが一致するか確認
       if (firstCard && secondCard && firstCard.value === secondCard.value) {
         console.log('ペアが見つかりました！');
         setGameState((prev) => {
           if (!prev) return prev;
           const newState: GameState = {
             ...prev,
+            // 一致したカードをマッチ済みに設定
             cards: prev.cards.map((card) =>
               card.id === firstId || card.id === secondId
                 ? { ...card, isMatched: true }
                 : card
             ),
+            // 現在のプレイヤーのスコアを増やす
             [prev.currentPlayer + 'Score']:
               (prev[
                 (prev.currentPlayer + 'Score') as keyof Pick<
@@ -70,20 +76,17 @@ const GameBoard: React.FC = () => {
           };
           return newState;
         });
-        console.log(
-          `ペアを見つけました。${
-            gameState.currentPlayer === 'player' ? 'プレイヤー' : 'CPU'
-          }のターンを継続します。`
-        );
       } else {
         console.log('ペアが見つかりませんでした。');
         setTimeout(() => {
           setGameState((prev) => {
             if (!prev) return prev;
+            // ターンを次のプレイヤーに移す
             const nextPlayer =
               prev.currentPlayer === 'player' ? 'cpu' : 'player';
             return {
               ...prev,
+              // 一致しなかったカードを裏返す
               cards: prev.cards.map((card) =>
                 card.id === firstId || card.id === secondId
                   ? { ...card, isFlipped: false }
@@ -95,6 +98,7 @@ const GameBoard: React.FC = () => {
         }, 1000);
       }
 
+      // 状態をリセット
       setFlippedCards([]);
       setIsChecking(false);
     },
@@ -109,11 +113,13 @@ const GameBoard: React.FC = () => {
         if (!prev) return prev;
         return {
           ...prev,
+          // 指定されたカードを表向きにする
           cards: prev.cards.map((card) =>
             card.id === id ? { ...card, isFlipped: true } : card
           ),
         };
       });
+      // めくられたカードのIDを保存
       setFlippedCards((prev) => [...prev, id]);
     },
     [gameState]
@@ -122,18 +128,19 @@ const GameBoard: React.FC = () => {
   // カードがクリックされたときの処理
   const handleCardClick = useCallback(
     (id: number) => {
-      // 判定中の場合はクリックを無効にする
+      // 判定中または2枚のカードがすでにめくられている場合はクリックを無効にする
       if (!gameState || isChecking || flippedCards.length >= 2) return;
 
       const clickedCard = gameState.cards.find((card) => card.id === id);
+      // すでにめくられているカードやマッチ済みのカードは無視
       if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched)
         return;
 
       flipCard(id);
       console.log(`プレイヤーが${clickedCard.value}をめくりました。`);
 
+      // 2枚目のカードがめくられたら一致を確認
       if (flippedCards.length === 1) {
-        // 2枚目のカードを引いた瞬間に判定中フラグを立てる
         setIsChecking(true);
         setTimeout(() => {
           checkForMatch([flippedCards[0], id]);
@@ -147,17 +154,20 @@ const GameBoard: React.FC = () => {
   const handleCpuTurn = useCallback(() => {
     if (!gameState) return;
     console.log('CPUのターンが開始されました');
+    // めくられていないカードを選択
     const unflippedCards = gameState.cards.filter(
       (card) => !card.isFlipped && !card.isMatched
     );
     if (unflippedCards.length < 2) return;
 
+    // ランダムに1枚目のカードを選択
     const firstCard =
       unflippedCards[Math.floor(Math.random() * unflippedCards.length)];
     flipCard(firstCard.id);
     console.log(`CPUが${firstCard.value}をめくりました。`);
 
     setTimeout(() => {
+      // ランダムに2枚目のカードを選択
       const remainingCards = unflippedCards.filter(
         (card) => card.id !== firstCard.id
       );
@@ -178,8 +188,10 @@ const GameBoard: React.FC = () => {
   const checkForGameEnd = useCallback(() => {
     if (!gameState) return;
 
+    // すべてのカードがマッチしたか確認
     const allMatched = gameState.cards.every((card) => card.isMatched);
     if (allMatched) {
+      // 勝者を決定
       const winner =
         gameState.playerScore > gameState.cpuScore
           ? { message: 'プレイヤーの勝利', color: 'text-indigo-600' }
@@ -219,7 +231,10 @@ const GameBoard: React.FC = () => {
         <div className='w-full flex justify-center items-center mb-6'>
           <div className='relative group'>
             {/* バックグラウンドエフェクト */}
-            <div className='absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 blur-xl rounded-xl opacity-75 group-hover:opacity-100 transition duration-1000'></div>
+            <div
+              className='absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 
+              blur-xl rounded-xl opacity-75 group-hover:opacity-100 transition duration-1000'
+            ></div>
 
             {/* メインコンテナ */}
             <div className='relative px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 bg-white dark:bg-gray-900 rounded-xl shadow-xl'>
