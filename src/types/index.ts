@@ -42,3 +42,11 @@ export type GameAction =
   | { type: 'MATCH_CARDS'; indices: [number, number] }
   | { type: 'NEXT_TURN' }
   | { type: 'RESET_GAME' };
+
+/**
+ * 勝者情報の型を共通化
+ */
+export type WinnerInfo = {
+  message: string;
+  color: string;
+} | null;

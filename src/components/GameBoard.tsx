@@ -131,22 +131,26 @@ const GameBoard: React.FC = () => {
   const handleCardClick = useCallback(
     (id: number) => {
       // 判定中または2枚のカードがすでにめくられている場合はクリックを無効にする
-      if (!gameState || isChecking || flippedCards.length >= 2) return;
+      try {
+        if (!gameState || isChecking || flippedCards.length >= 2) return;
 
-      const clickedCard = gameState.cards.find((card) => card.id === id);
-      // すでにめくられているカードやマッチ済みのカードは無視
-      if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched)
-        return;
+        const clickedCard = gameState.cards.find((card) => card.id === id);
+        // すでにめくられているカードやマッチ済みのカードは無視
+        if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched)
+          return;
 
-      flipCard(id);
-      console.log(`プレイヤーが${clickedCard.value}をめくりました。`);
+        flipCard(id);
+        console.log(`プレイヤーが${clickedCard.value}をめくりました。`);
 
-      // 2枚目のカードがめくられたら一致を確認
-      if (flippedCards.length === 1) {
-        setIsChecking(true);
-        setTimeout(() => {
-          checkForMatch([flippedCards[0], id]);
-        }, 1000);
+        // 2枚目のカードがめくられたら一致を確認
+        if (flippedCards.length === 1) {
+          setIsChecking(true);
+          setTimeout(() => {
+            checkForMatch([flippedCards[0], id]);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('カードクリック処理でエラーが発生しました:', error);
       }
     },
     [gameState, isChecking, flippedCards, flipCard, checkForMatch]
