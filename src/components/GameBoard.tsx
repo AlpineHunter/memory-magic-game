@@ -239,28 +239,6 @@ const GameBoard: React.FC = () => {
               className='absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 
               blur-xl rounded-xl opacity-75 group-hover:opacity-100 transition duration-1000'
             ></div>
-
-            {/* メインコンテナ */}
-            <div className='relative px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 bg-white dark:bg-gray-900 rounded-xl shadow-xl'>
-              <div className='flex flex-col items-center space-y-1'>
-                {/* メインタイトル */}
-                <div className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent'>
-                  Memory Card Game
-                </div>
-
-                {/* 日本語タイトル */}
-                <div className='text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-widest bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent'>
-                  メモリーカードゲーム
-                </div>
-
-                {/* 装飾的なカード要素 */}
-                <div className='absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-10 border-2 border-indigo-500/30 rounded-md transform -rotate-12'></div>
-                <div className='absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-10 border-2 border-purple-500/30 rounded-md transform rotate-12'></div>
-
-                {/* 下部のアクセントライン */}
-                <div className='absolute bottom-2 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent'></div>
-              </div>
-            </div>
           </div>
         </div>
 
