@@ -18,7 +18,7 @@ const GameBoard: React.FC = () => {
 
   // カードをシャッフルする関数
   const shuffleCards = (cards: CardState[]): CardState[] => {
-    const shuffled = [...cards];
+    const shuffled = Array.from(cards);
     // Fisher-Yatesアルゴリズムでカードをシャッフル
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -203,7 +203,7 @@ const GameBoard: React.FC = () => {
     } else {
       // メモリを使用した選択
       let foundPair = false;
-      for (const [value, ids] of cpuMemory.entries()) {
+      for (const [, ids] of cpuMemory.entries()) {
         const availableIds = ids.filter(
           (id) =>
             !gameState.cards.find((card) => card.id === id)?.isMatched &&
