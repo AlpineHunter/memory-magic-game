@@ -203,9 +203,10 @@ const GameBoard: React.FC = () => {
     } else {
       // メモリを使用した選択
       let foundPair = false;
-      for (const [, ids] of Array.from(cpuMemory.entries())) {
+      for (const entries of Array.from(cpuMemory)) {
+        const [, ids] = entries;
         const availableIds = ids.filter(
-          (id: number) =>
+          (id) =>
             !gameState.cards.find((card) => card.id === id)?.isMatched &&
             !gameState.cards.find((card) => card.id === id)?.isFlipped
         );
