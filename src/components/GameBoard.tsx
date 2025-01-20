@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import type { CardState, GameState } from '@/types';
 import ScoreBoard from './ScoreBoard';
 import Card from './Card';
@@ -10,6 +10,11 @@ const GameBoard: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [isChecking, setIsChecking] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  // CPUレベルのstate追加
+  const [cpuLevel, setCpuLevel] = useState<1 | 2 | 3>(1);
+  // CPUのメモリを追加
+  const [cpuMemory, setCpuMemory] = useState<Map<string, number[]>>(new Map());
 
   // カードをシャッフルする関数
   const shuffleCards = (cards: CardState[]): CardState[] => {
@@ -22,7 +27,7 @@ const GameBoard: React.FC = () => {
     return shuffled;
   };
 
-  // ゲームを初期化する関数
+  // ゲームを初期化する関数を更新
   const initializeGame = useCallback((): GameState => {
     console.log('ゲームを初期化中...');
     // 1から8までの数字を2セット作成
@@ -61,13 +66,11 @@ const GameBoard: React.FC = () => {
           if (!prev) return prev;
           const newState: GameState = {
             ...prev,
-            // 一致したカードをマッチ済みに設定
             cards: prev.cards.map((card) =>
               card.id === firstId || card.id === secondId
                 ? { ...card, isMatched: true }
                 : card
             ),
-            // 現在のプレイヤーのスコアを増やす
             [prev.currentPlayer + 'Score']:
               (prev[
                 (prev.currentPlayer + 'Score') as keyof Pick<
@@ -78,50 +81,64 @@ const GameBoard: React.FC = () => {
           };
           return newState;
         });
+        // ペアが見つかった後に即座にisCheckingをfalseに設定
+        setIsChecking(false);
+        setFlippedCards([]);
       } else {
         console.log('ペアが見つかりませんでした。');
-        setTimeout(() => {
-          setGameState((prev) => {
-            if (!prev) return prev;
-            // ターンを次のプレイヤーに移す
-            const nextPlayer =
-              prev.currentPlayer === 'player' ? 'cpu' : 'player';
-            return {
-              ...prev,
-              // 一致しなかったカードを裏返す
-              cards: prev.cards.map((card) =>
-                card.id === firstId || card.id === secondId
-                  ? { ...card, isFlipped: false }
-                  : card
-              ),
-              currentPlayer: nextPlayer,
-            };
-          });
+        const timer = setTimeout(() => {
+          if (!isGameOver) {
+            // ゲームオーバーでない場合のみ状態を更新
+            setGameState((prev) => {
+              if (!prev) return prev;
+              const nextPlayer =
+                prev.currentPlayer === 'player' ? 'cpu' : 'player';
+              return {
+                ...prev,
+                cards: prev.cards.map((card) =>
+                  card.id === firstId || card.id === secondId
+                    ? { ...card, isFlipped: false }
+                    : card
+                ),
+                currentPlayer: nextPlayer,
+              };
+            });
+          }
+          setIsChecking(false);
+          setFlippedCards([]);
         }, 1000);
-      }
 
-      // 状態をリセット
-      setFlippedCards([]);
-      setIsChecking(false);
+        return () => clearTimeout(timer); // タイマーのクリーンアップ
+      }
     },
-    [gameState]
+    [gameState, isGameOver] // isGameOverを依存配列に追加
   );
 
-  // カードをめくる関数
+  // カードをめくる関数を更新
   const flipCard = useCallback(
     (id: number) => {
       if (!gameState) return;
       setGameState((prev) => {
         if (!prev) return prev;
+        const card = prev.cards.find((c) => c.id === id);
+        // CPUメモリに記録
+        if (card && prev.currentPlayer === 'player') {
+          setCpuMemory((prevMemory) => {
+            const newMemory = new Map(prevMemory);
+            const existing = newMemory.get(card.value) || [];
+            if (!existing.includes(id)) {
+              newMemory.set(card.value, [...existing, id]);
+            }
+            return newMemory;
+          });
+        }
         return {
           ...prev,
-          // 指定されたカードを表向きにする
           cards: prev.cards.map((card) =>
             card.id === id ? { ...card, isFlipped: true } : card
           ),
         };
       });
-      // めくられたカードのIDを保存
       setFlippedCards((prev) => [...prev, id]);
     },
     [gameState]
@@ -130,19 +147,23 @@ const GameBoard: React.FC = () => {
   // カードがクリックされたときの処理
   const handleCardClick = useCallback(
     (id: number) => {
-      // 判定中または2枚のカードがすでにめくられている場合はクリックを無効にする
       try {
-        if (!gameState || isChecking || flippedCards.length >= 2) return;
+        if (
+          !gameState ||
+          isChecking ||
+          flippedCards.length >= 2 ||
+          gameState.currentPlayer === 'cpu' ||
+          isGameOver
+        )
+          return;
 
         const clickedCard = gameState.cards.find((card) => card.id === id);
-        // すでにめくられているカードやマッチ済みのカードは無視
         if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched)
           return;
 
         flipCard(id);
         console.log(`プレイヤーが${clickedCard.value}をめくりました。`);
 
-        // 2枚目のカードがめくられたら一致を確認
         if (flippedCards.length === 1) {
           setIsChecking(true);
           setTimeout(() => {
@@ -153,42 +174,93 @@ const GameBoard: React.FC = () => {
         console.error('カードクリック処理でエラーが発生しました:', error);
       }
     },
-    [gameState, isChecking, flippedCards, flipCard, checkForMatch]
+    [gameState, isChecking, flippedCards, flipCard, checkForMatch, isGameOver]
   );
 
-  // CPUのターンを処理する関数
+  // CPUのターン処理を更新
   const handleCpuTurn = useCallback(() => {
-    if (!gameState) return;
+    if (!gameState || isGameOver) return;
     console.log('CPUのターンが開始されました');
-    // めくられていないカードを選択
+
     const unflippedCards = gameState.cards.filter(
       (card) => !card.isFlipped && !card.isMatched
     );
     if (unflippedCards.length < 2) return;
 
-    // ランダムに1枚目のカードを選択
-    const firstCard =
-      unflippedCards[Math.floor(Math.random() * unflippedCards.length)];
-    flipCard(firstCard.id);
-    console.log(`CPUが${firstCard.value}をめくりました。`);
+    let firstCard: CardState;
+    let secondCard: CardState;
 
-    setTimeout(() => {
-      // ランダムに2枚目のカードを選択
+    // レベルに応じた行動選択
+    if (cpuLevel === 1 || (cpuLevel === 2 && Math.random() > 0.4)) {
+      // ランダム選択
+      firstCard =
+        unflippedCards[Math.floor(Math.random() * unflippedCards.length)];
       const remainingCards = unflippedCards.filter(
         (card) => card.id !== firstCard.id
       );
-      if (remainingCards.length > 0) {
-        const secondCard =
-          remainingCards[Math.floor(Math.random() * remainingCards.length)];
-        flipCard(secondCard.id);
-        console.log(`CPUが${secondCard.value}をめくりました。`);
-        setIsChecking(true);
-        setTimeout(() => {
-          checkForMatch([firstCard.id, secondCard.id]);
-        }, 1000);
+      secondCard =
+        remainingCards[Math.floor(Math.random() * remainingCards.length)];
+    } else {
+      // メモリを使用した選択
+      let foundPair = false;
+      for (const [value, ids] of cpuMemory.entries()) {
+        const availableIds = ids.filter(
+          (id) =>
+            !gameState.cards.find((card) => card.id === id)?.isMatched &&
+            !gameState.cards.find((card) => card.id === id)?.isFlipped
+        );
+        if (availableIds.length >= 2) {
+          firstCard = gameState.cards.find(
+            (card) => card.id === availableIds[0]
+          )!;
+          secondCard = gameState.cards.find(
+            (card) => card.id === availableIds[1]
+          )!;
+          foundPair = true;
+          break;
+        }
       }
-    }, 1000);
-  }, [gameState, flipCard, checkForMatch]);
+
+      if (!foundPair) {
+        // ペアが見つからない場合はランダム選択
+        firstCard =
+          unflippedCards[Math.floor(Math.random() * unflippedCards.length)];
+        const remainingCards = unflippedCards.filter(
+          (card) => card.id !== firstCard.id
+        );
+        secondCard =
+          remainingCards[Math.floor(Math.random() * remainingCards.length)];
+      }
+    }
+
+    // カードをめくる処理
+    const firstTimer = setTimeout(() => {
+      if (!isGameOver) {
+        flipCard(firstCard.id);
+        console.log(`CPUが${firstCard.value}をめくりました。`);
+
+        const secondTimer = setTimeout(() => {
+          if (!isGameOver) {
+            flipCard(secondCard.id);
+            console.log(`CPUが${secondCard.value}をめくりました。`);
+            setIsChecking(true);
+
+            const matchTimer = setTimeout(() => {
+              if (!isGameOver) {
+                checkForMatch([firstCard.id, secondCard.id]);
+              }
+            }, 1000);
+
+            return () => clearTimeout(matchTimer);
+          }
+        }, 1000);
+
+        return () => clearTimeout(secondTimer);
+      }
+    }, 500);
+
+    return () => clearTimeout(firstTimer);
+  }, [gameState, flipCard, checkForMatch, isGameOver, cpuLevel, cpuMemory]);
 
   // ペアがすべて成立したかを確認する関数
   const checkForGameEnd = useCallback((): {
@@ -199,6 +271,7 @@ const GameBoard: React.FC = () => {
 
     const allMatched = gameState.cards.every((card) => card.isMatched);
     if (allMatched) {
+      setIsGameOver(true);
       return gameState.playerScore > gameState.cpuScore
         ? { message: 'プレイヤーの勝利', color: 'text-indigo-600' }
         : gameState.playerScore < gameState.cpuScore
@@ -208,6 +281,9 @@ const GameBoard: React.FC = () => {
     return null;
   }, [gameState]);
 
+  // winnerInfoのメモ化を条件分岐の前に移動
+  const winnerInfo = useMemo(() => checkForGameEnd(), [checkForGameEnd]);
+
   // コンポーネントの初回レンダリング時にゲームを初期化
   useEffect(() => {
     setGameState(initializeGame());
@@ -215,36 +291,67 @@ const GameBoard: React.FC = () => {
 
   // ゲームの状態が変わったときにCPUのターンを処理
   useEffect(() => {
-    if (gameState && gameState.currentPlayer === 'cpu' && !isChecking) {
+    if (
+      gameState &&
+      gameState.currentPlayer === 'cpu' &&
+      !isChecking &&
+      !isGameOver &&
+      flippedCards.length === 0
+    ) {
       const timer = setTimeout(() => {
         handleCpuTurn();
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [gameState, isChecking, handleCpuTurn]);
+  }, [gameState, isChecking, handleCpuTurn, isGameOver, flippedCards]);
+
+  // レベル選択UIを更新
+  const renderLevelSelector = () => (
+    <div className="mb-4 flex justify-center gap-2">
+      {[1, 2, 3].map((level) => (
+        <button
+          key={level}
+          onClick={() => {
+            setCpuLevel(level as 1 | 2 | 3);
+            setCpuMemory(new Map()); // メモリをリセット
+            setFlippedCards([]); // めくられたカードをリセット
+            setIsChecking(false); // チェック状態をリセット
+            setIsGameOver(false); // ゲームオーバー状態をリセット
+            setGameState(initializeGame()); // ゲームを初期化
+          }}
+          className={`px-4 py-2 rounded ${
+            cpuLevel === level
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-200 text-gray-700'
+          }`}
+        >
+          レベル{level}
+        </button>
+      ))}
+    </div>
+  );
 
   if (!gameState) {
     return <div>Loading...</div>;
   }
 
-  const winnerInfo = checkForGameEnd();
-
   return (
-    <div className='flex justify-center items-center min-h-screen'>
-      <div className='game-board w-full max-w-4xl mx-auto p-4'>
-        <div className='w-full flex justify-center items-center mb-6'>
-          <div className='relative group'>
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="game-board w-full max-w-4xl mx-auto p-4">
+        {renderLevelSelector()}
+        <div className="w-full flex justify-center items-center mb-6">
+          <div className="relative group">
             {/* バックグラウンドエフェクト */}
             <div
-              className='absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 
-              blur-xl rounded-xl opacity-75 group-hover:opacity-100 transition duration-1000'
+              className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 
+              blur-xl rounded-xl opacity-75 group-hover:opacity-100 transition duration-1000"
             ></div>
           </div>
         </div>
 
         <ScoreBoard gameState={gameState} winnerInfo={winnerInfo} />
 
-        <div className='grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full justify-items-center'>
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-5 w-full justify-items-center">
           {gameState.cards.map((card) => (
             <Card key={card.id} card={card} onClick={handleCardClick} />
           ))}
