@@ -190,30 +190,42 @@ const GameBoard: React.FC = () => {
     let firstCard: CardState;
     let secondCard: CardState;
 
-    // レベルに応じた行動選択
+    // CPUの難易度に応じた行動を選択
     if (cpuLevel === 1 || (cpuLevel === 2 && Math.random() > 0.4)) {
-      // ランダム選択
+      // レベル1の場合、または レベル2で40%の確率でランダム選択を行う
+
+      // まだめくられていないカードからランダムに1枚目を選択
       firstCard =
         unflippedCards[Math.floor(Math.random() * unflippedCards.length)];
+
+      // 1枚目を除いた残りのカードから2枚目をランダムに選択
       const remainingCards = unflippedCards.filter(
         (card) => card.id !== firstCard.id
       );
       secondCard =
         remainingCards[Math.floor(Math.random() * remainingCards.length)];
     } else {
-      // メモリを使用した選択
+      // レベル3、またはレベル2で60%の確率でメモリを使用した選択を行う
+
       let foundPair = false;
+      // CPUのメモリ（過去に見たカード）を走査
       for (const entries of Array.from(cpuMemory)) {
-        const [, ids] = entries;
+        const [, ids] = entries; // 同じ数字のカードIDの配列
+
+        // 記憶したカードの中から、まだマッチしておらず、めくられていないカードを抽出
         const availableIds = ids.filter(
           (id) =>
-            !gameState.cards.find((card) => card.id === id)?.isMatched &&
-            !gameState.cards.find((card) => card.id === id)?.isFlipped
+            !gameState.cards.find((card) => card.id === id)?.isMatched && // マッチしていない
+            !gameState.cards.find((card) => card.id === id)?.isFlipped // めくられていない
         );
+
+        // 使用可能なカードが2枚以上ある場合（ペアを発見）
         if (availableIds.length >= 2) {
+          // 記憶したペアの1枚目を選択
           firstCard = gameState.cards.find(
             (card) => card.id === availableIds[0]
           )!;
+          // 記憶したペアの2枚目を選択
           secondCard = gameState.cards.find(
             (card) => card.id === availableIds[1]
           )!;
@@ -222,8 +234,9 @@ const GameBoard: React.FC = () => {
         }
       }
 
+      // 記憶からペアが見つからなかった場合
       if (!foundPair) {
-        // ペアが見つからない場合はランダム選択
+        // ランダム選択に切り替え
         firstCard =
           unflippedCards[Math.floor(Math.random() * unflippedCards.length)];
         const remainingCards = unflippedCards.filter(
